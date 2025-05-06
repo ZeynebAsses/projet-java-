@@ -1,0 +1,74 @@
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class BDcontact {
+    private static final String URL = "jdbc:oracle:thin:@localhost:1521:XE";
+    private static final String USER = "test";
+    private static final String PASSWORD = "test_4U";
+
+    // Établit la connexion à la BDD
+    private Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(URL, USER, PASSWORD);
+    }
+
+
+
+    // Récupère tous les contacts
+    public List<Contact> getAllContacts() {
+        List<Contact> contacts = new ArrayList<>();
+        String sql = "SELECT nom, prenom, telephone FROM contacts ORDER BY nom, prenom";
+
+        try (Connection conn = getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                contacts.add(new Contact(
+                        rs.getString("nom"),
+                        rs.getString("prenom"),
+                        rs.getString("telephone")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur lors du chargement: " + e.getMessage());
+        }
+        return contacts;
+    }
+
+    // Ajoute un nouveau contact
+    public void addContact(Contact contact) {
+        String sql = "INSERT INTO contacts (nom, prenom, telephone) VALUES (?, ?, ?)";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, contact.getNom());
+            pstmt.setString(2, contact.getPrenom());
+            pstmt.setString(3, contact.getTelephone());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de l'ajout: " + e.getMessage());
+        }
+    }
+
+    // Supprime un contact
+    public void deleteContact(Contact contact) {
+        String sql = "DELETE FROM contacts WHERE nom = ? AND prenom = ? AND telephone = ?";
+
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, contact.getNom());
+            pstmt.setString(2, contact.getPrenom());
+            pstmt.setString(3, contact.getTelephone());
+            pstmt.executeUpdate();
+
+        } catch (SQLException e) {
+            System.err.println("Erreur lors de la suppression: " + e.getMessage());
+        }
+    }
+
+
+}
